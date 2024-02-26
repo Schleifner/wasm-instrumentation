@@ -1,0 +1,8 @@
+.cache/
+build/
+node_modules/
+.vscode
+.gradle/
+.idea/
+dist/
+package-lock.json

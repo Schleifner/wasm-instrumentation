@@ -1,0 +1,90 @@
+name: CMake
+
+on:
+  pull_request:
+    branches:
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: wasm-instrumentation
+  DOCKER_IMAGE_NAME: wasm-instrumentation:latest
+  DOCKER_RUN_COMMAND: docker run --rm -i -v ${{ github.workspace }}:/home/wasm-instrumentation wasm-instrumentation:latest bash -c
+
+jobs:
+  Build:
+    runs-on: [ cawe-linux-x64-compute-large ]
+    steps:
+      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v3
+      - name: Submodule
+        working-directory: ${{github.workspace}}/thirdparty
+        run: git submodule update --init && cd binaryen && git submodule update --init
+      - uses: docker/build-push-action@v3
+        with:
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ env.DOCKER_IMAGE_NAME }}
+          load: true
+
+      - name: Clang-format check
+        run: |
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            find src test  -regex ".*\\.\\(cpp\\|hpp\\|c\\|h\\)" | xargs clang-format -style=file --Werror --dry-run
+          '
+
+      - name: Spell check
+        run: |
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            cspell "{src,test}/**/*.{hpp,cpp}"
+          '
+  
+      - name: Build
+        run: |
+            ${{ env.DOCKER_RUN_COMMAND }} '
+              cmake -B build -DENABLE_E2E=1 -DENABLE_FUZZ=1 -DENABLE_SANITIZE=1 -DENABLE_CLANG_TIDY=1 -DENABLE_WERROR=1 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++  -G Ninja
+              cmake --build build --parallel
+            '
+  
+      - name: Test Coverage
+        run: |
+            ${{ env.DOCKER_RUN_COMMAND }} '
+              cd build
+              ninja cov
+            '
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./build/cov.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '100 100'
+      
+      - name: "Build JS variant"
+        run: |
+            ${{ env.DOCKER_RUN_COMMAND }} '
+              cd /opt/emsdk
+              . emsdk_env.sh
+              cd /home/${{ env.PROJECT_NAME }}
+              mkdir dist
+              cd dist
+              emcc --version
+              emcmake cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DGTEST_LIBRARY=/usr/src/gtest/lib/libgtest.a -DGTEST_MAIN_LIBRARY=/usr/src/gtest/lib/libgtest_main.a -DGTEST_INCLUDE_DIR=/usr/src/gtest/include/ -DBUILD_TESTS=0 -DEMSCRIPTEN=1
+              emmake make -j$(nproc) wasm-instrumentation
+            '
+      
+      
+      
+            
+            
+
+

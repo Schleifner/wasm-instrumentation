@@ -1,0 +1,36 @@
+{
+  "name": "wasm-instrumentation",
+  "version": "1.0.0",
+  "description": "WebAssembly instrumentation tool",
+  "main": "dist/bin/wasm-instrumentation.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/bin/wasm-instrumentation.js",
+      "types": "./dist/type/wasm-instrumentation.d.ts"
+    }
+  },
+  "files": [
+    "dist/bin/wasm-instrumentation.js",
+    "dist/type/wasm-instrumentation.d.ts"
+  ],
+  "scripts": {
+    "cspell": "./node_modules/cspell/bin.js \"{src,test}/**/*.{hpp,cpp}\"",
+    "genDeclaration": "npx -p typescript tsc dist/bin/wasm-instrumentation.js --declaration --allowJs --emitDeclarationOnly --outDir dist/type/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Schleifner/wasm-instrumentation.git"
+  },
+  "keywords": [
+    "WebAssembly",
+    "Instrumentation"
+  ],
+  "publishConfig": {
+    "repository": "https://www.npmjs.com/"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cspell": "^6.31.1"
+  }
+}

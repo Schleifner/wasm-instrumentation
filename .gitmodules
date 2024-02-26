@@ -1,0 +1,6 @@
+[submodule "thirdparty/jsoncpp"]
+	path = thirdparty/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "thirdparty/binaryen"]
+	path = thirdparty/binaryen
+	url = https://github.com/WebAssembly/binaryen.git
