@@ -26,18 +26,7 @@ jobs:
           tags: ${{ env.DOCKER_IMAGE_NAME }}
           load: true
 
-      - name: "Build JS variant"
-        run: |
-            ${{ env.DOCKER_RUN_COMMAND }} '
-              cd /opt/emsdk
-              . emsdk_env.sh
-              cd /home/${{ env.PROJECT_NAME }}
-              mkdir dist
-              cd dist
-              emcc --version
-              emcmake cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DGTEST_LIBRARY=/usr/src/gtest/lib/libgtest.a -DGTEST_MAIN_LIBRARY=/usr/src/gtest/lib/libgtest_main.a -DGTEST_INCLUDE_DIR=/usr/src/gtest/include/ -DBUILD_TESTS=0 -DEMSCRIPTEN=1
-              emmake make -j$(nproc) wasm-instrumentation
-            '
+      - uses: ./.github/workflows/reusable-buildJSVariant.yml
 
       - name: generate Declaration
         run: |
