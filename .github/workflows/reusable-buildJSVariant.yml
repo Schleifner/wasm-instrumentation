@@ -1,5 +1,8 @@
 name: "build-JS-variant"
 
+on:
+  workflow_call:
+
 env:
   DOCKER_RUN_COMMAND: docker run --rm -i -v ${{ github.workspace }}:/home/wasm-instrumentation wasm-instrumentation:latest bash -c
 
