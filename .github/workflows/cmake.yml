@@ -69,8 +69,11 @@ jobs:
           output: both
           thresholds: '100 100'
       
-  Build-JS-Variant:
-    uses: ./.github/workflows/reusable-buildJSVariant.yml
+      - name: Build JS Variant
+        uses: ./.github/actions/build-JS-variant
+        with:
+          DOCKER_RUN_COMMAND: ${{ env.DOCKER_RUN_COMMAND }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
       
       
       

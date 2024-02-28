@@ -1,0 +1,26 @@
+name: "Emcc build"
+description: "Common steps for build JS variant"
+
+inputs:
+  DOCKER_RUN_COMMAND:
+    description: 'docker run command passed to the action'
+    required: true
+  PROJECT_NAME:
+    description: 'project name passed to the action'
+    required: true
+    
+runs:
+  using: "composite"
+  steps:
+    - name: "Build JS variant"
+      run: |
+        ${{ inputs.DOCKER_RUN_COMMAND }} '
+          cd /opt/emsdk
+          . emsdk_env.sh
+          cd /home/${{ inputs.PROJECT_NAME }}
+          mkdir dist
+          cd dist
+          emcc --version
+          emcmake cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DGTEST_LIBRARY=/usr/src/gtest/lib/libgtest.a -DGTEST_MAIN_LIBRARY=/usr/src/gtest/lib/libgtest_main.a -DGTEST_INCLUDE_DIR=/usr/src/gtest/include/ -DBUILD_TESTS=0 -DEMSCRIPTEN=1
+          emmake make -j$(nproc) wasm-instrumentation
+        '
