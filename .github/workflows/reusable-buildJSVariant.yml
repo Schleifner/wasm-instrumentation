@@ -4,10 +4,11 @@ on:
   workflow_call:
 
 env:
+  PROJECT_NAME: wasm-instrumentation
   DOCKER_RUN_COMMAND: docker run --rm -i -v ${{ github.workspace }}:/home/wasm-instrumentation wasm-instrumentation:latest bash -c
 
 jobs:
-  build
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: "Build JS variant"
