@@ -69,8 +69,8 @@ jobs:
           output: both
           thresholds: '100 100'
       
-      - uses: ./.github/workflows/reusable-buildJSVariant.yml
-
+  Build-JS-Variant:
+    uses: ./.github/workflows/reusable-buildJSVariant.yml
       
       
       
