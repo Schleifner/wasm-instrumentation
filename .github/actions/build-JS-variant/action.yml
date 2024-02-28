@@ -24,3 +24,4 @@ runs:
           emcmake cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DGTEST_LIBRARY=/usr/src/gtest/lib/libgtest.a -DGTEST_MAIN_LIBRARY=/usr/src/gtest/lib/libgtest_main.a -DGTEST_INCLUDE_DIR=/usr/src/gtest/include/ -DBUILD_TESTS=0 -DEMSCRIPTEN=1
           emmake make -j$(nproc) wasm-instrumentation
         '
+      shell: bash
