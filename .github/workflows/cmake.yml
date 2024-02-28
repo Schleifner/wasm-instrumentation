@@ -30,44 +30,44 @@ jobs:
           tags: ${{ env.DOCKER_IMAGE_NAME }}
           load: true
 
-      # - name: Clang-format check
-      #   run: |
-      #     ${{ env.DOCKER_RUN_COMMAND }} '
-      #       find src test  -regex ".*\\.\\(cpp\\|hpp\\|c\\|h\\)" | xargs clang-format -style=file --Werror --dry-run
-      #     '
+      - name: Clang-format check
+        run: |
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            find src test  -regex ".*\\.\\(cpp\\|hpp\\|c\\|h\\)" | xargs clang-format -style=file --Werror --dry-run
+          '
 
-      # - name: Spell check
-      #   run: |
-      #     ${{ env.DOCKER_RUN_COMMAND }} '
-      #       cspell "{src,test}/**/*.{hpp,cpp}"
-      #     '
+      - name: Spell check
+        run: |
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            cspell "{src,test}/**/*.{hpp,cpp}"
+          '
   
-      # - name: Build
-      #   run: |
-      #       ${{ env.DOCKER_RUN_COMMAND }} '
-      #         cmake -B build -DENABLE_E2E=1 -DENABLE_FUZZ=1 -DENABLE_SANITIZE=1 -DENABLE_CLANG_TIDY=1 -DENABLE_WERROR=1 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++  -G Ninja
-      #         cmake --build build --parallel
-      #       '
+      - name: Build
+        run: |
+            ${{ env.DOCKER_RUN_COMMAND }} '
+              cmake -B build -DENABLE_E2E=1 -DENABLE_FUZZ=1 -DENABLE_SANITIZE=1 -DENABLE_CLANG_TIDY=1 -DENABLE_WERROR=1 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++  -G Ninja
+              cmake --build build --parallel
+            '
   
-      # - name: Test Coverage
-      #   run: |
-      #       ${{ env.DOCKER_RUN_COMMAND }} '
-      #         cd build
-      #         ninja cov
-      #       '
+      - name: Test Coverage
+        run: |
+            ${{ env.DOCKER_RUN_COMMAND }} '
+              cd build
+              ninja cov
+            '
 
-      # - name: Code Coverage Report
-      #   uses: irongut/CodeCoverageSummary@v1.3.0
-      #   with:
-      #     filename: ./build/cov.xml
-      #     badge: true
-      #     fail_below_min: true
-      #     format: markdown
-      #     hide_branch_rate: false
-      #     hide_complexity: true
-      #     indicators: true
-      #     output: both
-      #     thresholds: '100 100'
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./build/cov.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '100 100'
       
       - name: Build JS Variant
         uses: ./.github/actions/build-JS-variant
