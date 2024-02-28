@@ -1,0 +1,42 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "*"
+env:
+  PROJECT_NAME: wasm-instrumentation
+  DOCKER_IMAGE_NAME: wasm-instrumentation:latest
+  DOCKER_RUN_COMMAND: docker run --rm -i -v ${{ github.workspace }}:/home/wasm-instrumentation wasm-instrumentation:latest bash -c
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v3
+      - name: Submodule
+        working-directory: ${{github.workspace}}/thirdparty
+        run: git submodule update --init && cd binaryen && git submodule update --init
+      - uses: docker/build-push-action@v3
+        with:
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ env.DOCKER_IMAGE_NAME }}
+          load: true
+
+      - uses: ./.github/actions/build-JS-variant
+        with:
+          DOCKER_RUN_COMMAND: ${{ env.DOCKER_RUN_COMMAND }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
+
+      - name: generate Declaration
+        run: |
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            npm run genDeclaration
+          '
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          greater-version-only: true
