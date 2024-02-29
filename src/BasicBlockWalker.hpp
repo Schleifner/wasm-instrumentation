@@ -154,9 +154,9 @@ public:
   }
 
 private:
-  wasm::Module *const module;                                           ///< working wasm module
-  wasm::Index functionIndex = 0U;                                       ///< function Index
-  const BasicBlockAnalysis &basicBlockAnalysis;                         ///< include analysis
+  wasm::Module *const module;                   ///< working wasm module
+  wasm::Index functionIndex = 0U;               ///< function Index
+  const BasicBlockAnalysis &basicBlockAnalysis; ///< include analysis
   std::unordered_map<wasm::Expression *, std::vector<InstrumentPosition>> covInstrumentPosition;
   std::unordered_map<std::string_view, FunctionAnalysisResult> results; ///< analysis results
   ///
