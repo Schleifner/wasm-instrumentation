@@ -15,7 +15,7 @@ env:
 
 jobs:
   Build:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-22.04"
     steps:
       - uses: docker/setup-buildx-action@v2
       - uses: actions/checkout@v3
