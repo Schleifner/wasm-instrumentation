@@ -163,7 +163,7 @@ InstrumentationResponse CoverageInstru::instrument() const noexcept {
 
 #if defined(__EMSCRIPTEN__)
 extern "C" EMSCRIPTEN_KEEPALIVE wasmInstrumentation::InstrumentationResponse
-cdc_instrument(char const *const fileName, char const *const targetName,
+wasm_instrument(char const *const fileName, char const *const targetName,
                char const *const reportFunction, char const *const sourceMap,
                char const *const expectInfoOutputFilePath,
                char const *const debugInfoOutputFilePath, char const *const includes,
