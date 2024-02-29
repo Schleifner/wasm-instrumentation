@@ -116,9 +116,9 @@ private:
 ///@return InstrumentationResponse
 extern "C" EMSCRIPTEN_KEEPALIVE wasmInstrumentation::InstrumentationResponse
 wasm_instrument(char const *const fileName, char const *const targetName,
-               char const *const reportFunction, char const *const sourceMap,
-               char const *const expectInfoOutputFilePath,
-               char const *const debugInfoOutputFilePath, char const *const includes = NULL,
-               char const *const excludes = NULL, bool skipLib = true) noexcept;
+                char const *const reportFunction, char const *const sourceMap,
+                char const *const expectInfoOutputFilePath,
+                char const *const debugInfoOutputFilePath, char const *const includes = NULL,
+                char const *const excludes = NULL, bool skipLib = true) noexcept;
 #endif
 #endif

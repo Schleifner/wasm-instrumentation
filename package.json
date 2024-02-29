@@ -1,6 +1,6 @@
 {
   "name": "wasm-instrumentation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "WebAssembly instrumentation tool",
   "main": "dist/bin/wasm-instrumentation.js",
   "type": "module",

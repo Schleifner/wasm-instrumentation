@@ -88,10 +88,10 @@ public:
   uint32_t mockWalk() noexcept;
 
 private:
-  wasm::Module *const module;  ///< working module
-  const std::string checkMock; ///< mock check string
-  wasm::Builder moduleBuilder; ///< module builder
-  uint32_t expectIndex = 0U;   ///< expectation index, auto increase
+  wasm::Module *const module;                            ///< working module
+  const std::string checkMock;                           ///< mock check string
+  wasm::Builder moduleBuilder;                           ///< module builder
+  uint32_t expectIndex = 0U;                             ///< expectation index, auto increase
   std::unordered_map<std::string, std::pair<wasm::Name, wasm::Index>>
       funcRefs;                                          ///< cache function references
   std::unordered_map<uint32_t, std::string> expectInfos; ///< cache expectation infos
