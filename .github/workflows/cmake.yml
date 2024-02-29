@@ -33,6 +33,7 @@ jobs:
       - name: Clang-format check
         run: |
           ${{ env.DOCKER_RUN_COMMAND }} '
+            clang-format --version
             find src test  -regex ".*\\.\\(cpp\\|hpp\\|c\\|h\\)" | xargs clang-format -style=file --Werror --dry-run
           '
 
