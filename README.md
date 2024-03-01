@@ -26,7 +26,7 @@ export async function instrument() {
   const debugInfo = instrumenter.allocateUTF8("./build.debugInfo.json");
   const expectInfo = instrumenter.allocateUTF8("./build.expectInfo.json");
 
-  instrumenter._cdc_instrument(source, output, report, sourceMap, expectInfo, debugInfo, null, null, true);
+  instrumenter._wasm_instrument(source, output, report, sourceMap, expectInfo, debugInfo, null, null, true);
 }
 ```
 
@@ -34,7 +34,7 @@ API
 ---
 
 ```js
-_cdc_instrument(sourceWasm, outputWasm, reportFunctionName, sourceMap, expectInfo, debugInfo, include, exclude, skipLib)
+_wasm_instrument(sourceWasm, outputWasm, reportFunctionName, sourceMap, expectInfo, debugInfo, include, exclude, skipLib)
 ```
 - sourceWasm: source wasm file path
 - outputWasm: output wasm file path after instrumentation
