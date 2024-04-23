@@ -1,7 +1,9 @@
 #ifndef __ASC_COV_MOCKINSTRUMENTATION_WALKER_HPP__
 #define __ASC_COV_MOCKINSTRUMENTATION_WALKER_HPP__
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -16,9 +18,7 @@ namespace wasmInstrumentation {
 ///
 // mock test will be tested with wasm-testing-framework project, escape this class
 // LCOV_EXCL_START
-class MockInstrumentationWalker final
-    : public wasm::PostWalker<MockInstrumentationWalker,
-                              wasm::Visitor<MockInstrumentationWalker, void>> {
+class MockInstrumentationWalker final : public wasm::PostWalker<MockInstrumentationWalker> {
 public:
   ///
   /// @brief Constructor for MockInstrumentationWalker
@@ -70,6 +70,54 @@ public:
   /// @param curr Current expression reference
   void visitCall(wasm::Call *const curr) noexcept;
 
+  static void doPreVisit(MockInstrumentationWalker *self, wasm::Expression **currp) {
+    auto *curr = *currp;
+    auto &locs = self->getFunction()->debugLocations;
+    auto &expressionStack = self->expressionStack;
+    if (locs.find(curr) == locs.end()) {
+      // No debug location, see if we should inherit one.
+      if (auto *previous = self->getPrevious()) {
+        if (auto it = locs.find(previous); it != locs.end()) {
+          locs[curr] = it->second;
+        }
+      }
+    }
+    expressionStack.push_back(curr);
+  }
+
+  static void doPostVisit(MockInstrumentationWalker *self, wasm::Expression **currp) {
+    auto &exprStack = self->expressionStack;
+    while (exprStack.back() != *currp) {
+      // pop all the child expressions and keep current expression in stack.
+      exprStack.pop_back();
+    }
+    // the stack should never be empty
+    assert(!exprStack.empty());
+  }
+
+  static void scan(MockInstrumentationWalker *self, wasm::Expression **currp) {
+    self->pushTask(MockInstrumentationWalker::doPostVisit, currp);
+
+    wasm::PostWalker<MockInstrumentationWalker>::scan(self, currp);
+
+    self->pushTask(MockInstrumentationWalker::doPreVisit, currp);
+  }
+
+  wasm::Expression *replaceCurrent(wasm::Expression *expression) {
+    wasm::PostWalker<MockInstrumentationWalker>::replaceCurrent(expression);
+    // also update the stack
+    expressionStack.back() = expression;
+    return expression;
+  }
+
+  wasm::Expression *getPrevious() {
+    if (expressionStack.empty()) {
+      return nullptr;
+    }
+    assert(expressionStack.size() >= 1);
+    return expressionStack[expressionStack.size() - 1];
+  }
+
   ///
   /// @brief Visit call indirect instruction
   ///
@@ -92,6 +140,7 @@ private:
   const std::string checkMock; ///< mock check string
   wasm::Builder moduleBuilder; ///< module builder
   uint32_t expectIndex = 0U;   ///< expectation index, auto increase
+  wasm::ExpressionStack expressionStack;
   std::unordered_map<std::string, std::pair<wasm::Name, wasm::Index>>
       funcRefs;                                          ///< cache function references
   std::unordered_map<uint32_t, std::string> expectInfos; ///< cache expectation infos

@@ -1,4 +1,5 @@
 #include "MockInstrumentationWalker.hpp"
+#include <regex>
 #include <support/index.h>
 #include <wasm.h>
 // mock test will be tested with wasm-testing-framework project, escape this class
@@ -6,45 +7,47 @@
 using namespace wasmInstrumentation;
 
 void MockInstrumentationWalker::visitCall(wasm::Call *const curr) noexcept {
-  const auto functionRefsIterator = funcRefs.find(curr->target.toString());
-  if (functionRefsIterator == funcRefs.cend()) {
-    if (std::any_of(this->expectTestFuncNames.begin(), this->expectTestFuncNames.end(),
-                    [&curr](const std::string_view &str) noexcept {
-                      return curr->target.hasSubstring(str);
-                    })) {
-      const std::unordered_map<wasm::Expression *, wasm::Function::DebugLocation>
-          currDebugLocations = getFunction()->debugLocations;
-      const auto currentDebugLocationIterator = currDebugLocations.find(curr);
-      if (currentDebugLocationIterator != currDebugLocations.cend()) {
-        wasm::Function::DebugLocation const &currDebugLocation =
-            currentDebugLocationIterator->second;
-        const std::string &fileName = module->debugInfoFileNames[currDebugLocation.fileIndex];
-        std::stringstream expectInfo;
-        expectInfo << fileName << ":" << std::to_string(currDebugLocation.lineNumber) << ":"
-                   << std::to_string(currDebugLocation.columnNumber);
-        expectInfos[expectIndex] = expectInfo.str();
-      }
-      curr->operands.back() = moduleBuilder.makeConst(wasm::Literal(expectIndex));
-      expectIndex += 1;
+  /* generate expect infos */
+  if (std::any_of(this->expectTestFuncNames.begin(), this->expectTestFuncNames.end(),
+                  [&curr](const std::string_view &str) noexcept {
+                    return curr->target.hasSubstring(str);
+                  })) {
+    const std::unordered_map<wasm::Expression *, wasm::Function::DebugLocation> currDebugLocations =
+        getFunction()->debugLocations;
+
+    const auto currentDebugLocationIterator = currDebugLocations.find(curr);
+    if (currentDebugLocationIterator != currDebugLocations.cend()) {
+      wasm::Function::DebugLocation const &currDebugLocation = currentDebugLocationIterator->second;
+      const std::string &fileName = module->debugInfoFileNames[currDebugLocation.fileIndex];
+      std::stringstream expectInfo;
+      expectInfo << fileName << ":" << std::to_string(currDebugLocation.lineNumber) << ":"
+                 << std::to_string(currDebugLocation.columnNumber);
+      expectInfos[expectIndex] = expectInfo.str();
     }
-    return;
+    curr->operands.back() = moduleBuilder.makeConst(wasm::Literal(expectIndex));
+    expectIndex += 1;
   }
-  const wasm::Index localIdx = wasm::Builder::addVar(getFunction(), wasm::Type::i32);
-  const auto [tableName, originFuncIdx] = functionRefsIterator->second;
-  const std::array<wasm::Expression *, 2U> callArgs = {moduleBuilder.makeConst(originFuncIdx),
-                                                       moduleBuilder.makeConst(true)};
-  wasm::If *const mockReplacement = moduleBuilder.makeIf(
-      moduleBuilder.makeBinary(
-          wasm::BinaryOp::NeInt32,
-          moduleBuilder.makeLocalTee(localIdx,
-                                     moduleBuilder.makeCall(checkMock, callArgs, wasm::Type::i32),
-                                     wasm::Type::i32),
-          moduleBuilder.makeConst(-1)),
-      moduleBuilder.makeCallIndirect(tableName,
-                                     moduleBuilder.makeLocalGet(localIdx, wasm::Type::i32),
-                                     curr->operands, getModule()->getFunction(curr->target)->type),
-      curr);
-  replaceCurrent(mockReplacement);
+
+  /* Function Call Mock */
+  const auto functionRefsIterator = funcRefs.find(curr->target.toString());
+  if (functionRefsIterator != funcRefs.end()) {
+    const wasm::Index localIdx = wasm::Builder::addVar(getFunction(), wasm::Type::i32);
+    const auto [tableName, originFuncIdx] = functionRefsIterator->second;
+    const std::array<wasm::Expression *, 2U> callArgs = {moduleBuilder.makeConst(originFuncIdx),
+                                                         moduleBuilder.makeConst(true)};
+    wasm::If *const mockReplacement = moduleBuilder.makeIf(
+        moduleBuilder.makeBinary(
+            wasm::BinaryOp::NeInt32,
+            moduleBuilder.makeLocalTee(localIdx,
+                                       moduleBuilder.makeCall(checkMock, callArgs, wasm::Type::i32),
+                                       wasm::Type::i32),
+            moduleBuilder.makeConst(-1)),
+        moduleBuilder.makeCallIndirect(
+            tableName, moduleBuilder.makeLocalGet(localIdx, wasm::Type::i32), curr->operands,
+            getModule()->getFunction(curr->target)->type),
+        curr);
+    replaceCurrent(mockReplacement);
+  }
 }
 
 void MockInstrumentationWalker::visitCallIndirect(wasm::CallIndirect *const curr) noexcept {
@@ -84,7 +87,9 @@ uint32_t MockInstrumentationWalker::mockWalk() noexcept {
     return 1U; // failed
   } else {
     wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
-      walkFunctionInModule(func, this->module);
+      if (!std::regex_match(func->name.toString(), std::regex("~lib/.+"))) {
+        walkFunctionInModule(func, module);
+      }
     });
     return 0U;
   }

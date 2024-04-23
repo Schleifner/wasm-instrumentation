@@ -105,7 +105,7 @@ void CovInstrumentationWalker::covWalk() noexcept {
   wasm::ModuleUtils::iterDefinedFunctions(
       *module, [this](const BinaryenFunctionRef &func) noexcept {
         if (basicBlockWalker.getBasicBlockAnalysis().shouldIncludeFile(func->name.toString())) {
-          walkFunctionInModule(func, this->module);
+          walkFunctionInModule(func, module);
         }
       });
 }
