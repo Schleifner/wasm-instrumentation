@@ -43,8 +43,8 @@ TEST(asc_cov_instru_test, lit) {
       ASSERT_EQ(system(cmd.str().c_str()), 0);
     }
   }
-  const std::string include = "[\"main\",\"assembly/.*\"]";
-  const std::string exclude = "[\"shouldExclude.*\"]";
+  const char *include = "[\"main\",\"assembly/.*\"]";
+  const char *exclude = "[\"shouldExclude.*\"]";
   Json::Reader jsonReader;
   // step 3, instrument , run and check;
   for (Json::String const &wasm : wasmStrs) {
@@ -53,17 +53,17 @@ TEST(asc_cov_instru_test, lit) {
     const std::filesystem::path wasmTarget = buildDir / (wasm + ".instrumented.wasm");
     const std::filesystem::path debugTarget = buildDir / (wasm + ".debug.json");
     const std::filesystem::path expectTarget = buildDir / (wasm + ".expect.json");
-    const std::string traceFunName = "assembly/env/traceExpression";
+    const char *traceFunName = "assembly/env/traceExpression";
     wasmInstrumentation::InstrumentationConfig config;
     std::cout << "running lit for:" << wasmFile << std::endl;
-    config.fileName = const_cast<char *>(wasmFile.c_str());
-    config.debugInfoOutputFilePath = const_cast<char *>(debugTarget.c_str());
-    config.expectInfoOutputFilePath = const_cast<char *>(expectTarget.c_str());
-    config.sourceMap = const_cast<char *>(wasmFileMap.c_str());
-    config.targetName = const_cast<char *>(wasmTarget.c_str());
-    config.reportFunction = const_cast<char *>(traceFunName.c_str());
-    config.includes = const_cast<char *>(include.c_str());
-    config.excludes = const_cast<char *>(exclude.c_str());
+    config.fileName = wasmFile.c_str();
+    config.debugInfoOutputFilePath = debugTarget.c_str();
+    config.expectInfoOutputFilePath = expectTarget.c_str();
+    config.sourceMap = wasmFileMap.c_str();
+    config.targetName = wasmTarget.c_str();
+    config.reportFunction = traceFunName;
+    config.includes = include;
+    config.excludes = exclude;
     wasmInstrumentation::CoverageInstru instrumentor(&config);
     ASSERT_EQ(instrumentor.instrument(), wasmInstrumentation::InstrumentationResponse::NORMAL);
     std::stringstream cmd;

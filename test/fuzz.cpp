@@ -3,7 +3,6 @@
 #include <cstring>
 #include <filesystem>
 #include <gtest/gtest.h>
-#include <stdlib.h>
 #include <string_view>
 #include "../src/CoverageInstru.hpp"
 #include "../src/InstrumentResponse.hpp"
@@ -21,14 +20,14 @@ TEST(asc_cov_instru_test, fuzz_asc) {
       build_path / "assemblyscript.debug.wasm.debuginfo.json";
   const std::filesystem::path targetExpectInfoPath =
       build_path / "assemblyscript.debug.wasm.expectinfo.json";
-  const char reportName[] = {"assembly/env/traceExpression"};
+  const char *reportName = "assembly/env/traceExpression";
   wasmInstrumentation::InstrumentationConfig config;
   config.fileName = path.c_str();
   config.debugInfoOutputFilePath = targetDebugInfoPath.c_str();
   config.sourceMap = mapPath.c_str();
   config.targetName = targetPath.c_str();
   config.expectInfoOutputFilePath = targetExpectInfoPath.c_str();
-  config.reportFunction = const_cast<char *>(reportName);
+  config.reportFunction = reportName;
   wasmInstrumentation::CoverageInstru instrumentor(&config);
   ASSERT_EQ(instrumentor.instrument(), wasmInstrumentation::InstrumentationResponse::NORMAL);
 }
