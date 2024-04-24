@@ -1,5 +1,5 @@
 #include "CoverageInstru.hpp"
-using namespace wasmInstrumentation;
+namespace wasmInstrumentation {
 
 void CoverageInstru::innerAnalysis(BasicBlockAnalysis &basicBlockAnalysis) const noexcept {
   if (config->skipLib) {
@@ -47,8 +47,8 @@ InstrumentationResponse CoverageInstru::instrument() const noexcept {
     return InstrumentationResponse::CONFIG_FILEPATH_ERROR; // config file path error
   }
 
-  wasm::Module module;
-  wasm::ModuleReader reader;
+  Module module;
+  ModuleReader reader;
 
   reader.read(std::string(config->fileName), module, std::string(config->sourceMap));
   BasicBlockAnalysis basicBlockAnalysis = BasicBlockAnalysis();
@@ -73,7 +73,7 @@ InstrumentationResponse CoverageInstru::instrument() const noexcept {
     innerJson["branchInfo"] = branchInfoArray;
     Json::Value debugLineJson;
     for (const auto &basicBlock : result.basicBlocks) {
-      if (basicBlock.basicBlockIndex != static_cast<wasm::Index>(-1)) {
+      if (basicBlock.basicBlockIndex != static_cast<Index>(-1)) {
         Json::Value debugLineItemJsonArray(Json::ValueType::arrayValue);
         for (const auto &debugLine : basicBlock.debugLocations) {
           Json::Value debugInfo;
@@ -183,3 +183,5 @@ wasm_instrument(char const *const fileName, char const *const targetName,
   return instrumentor.instrument();
 }
 #endif
+
+} // namespace wasmInstrumentation

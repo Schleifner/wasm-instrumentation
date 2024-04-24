@@ -26,6 +26,8 @@
 #include "wasm.h"
 
 namespace wasmInstrumentation {
+using namespace wasm;
+
 ///
 /// @brief Customer input configuration for instrumentation
 ///

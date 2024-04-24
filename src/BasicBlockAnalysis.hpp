@@ -43,4 +43,5 @@ private:
   std::vector<std::regex> excludes; ///< functions should not be processed
 };
 } // namespace wasmInstrumentation
+
 #endif

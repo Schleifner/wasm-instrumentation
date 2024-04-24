@@ -4,10 +4,10 @@
 #include <regex>
 #include <string>
 #include <utility>
-using namespace wasmInstrumentation;
+
+namespace wasmInstrumentation {
 
 bool BasicBlockAnalysis::shouldIncludeFile(const std::string &&fileName) const noexcept {
-
   bool shouldInclude = false;
   bool shouldExclude = false;
   if (includes.size() == 0) {
@@ -28,3 +28,5 @@ bool BasicBlockAnalysis::shouldIncludeFile(const std::string &&fileName) const n
   }
   return (shouldInclude && (!shouldExclude));
 }
+
+} // namespace wasmInstrumentation
