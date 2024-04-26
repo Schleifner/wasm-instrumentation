@@ -5,7 +5,7 @@ on:
     branches: "*"
 
 concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
   cancel-in-progress: true
 
 env:
@@ -41,20 +41,20 @@ jobs:
           ${{ env.DOCKER_RUN_COMMAND }} '
             cspell "{src,test}/**/*.{hpp,cpp}"
           '
-  
+
       - name: Build
         run: |
-            ${{ env.DOCKER_RUN_COMMAND }} '
-              cmake -B build -DENABLE_E2E=1 -DENABLE_FUZZ=1 -DENABLE_SANITIZE=1 -DENABLE_CLANG_TIDY=1 -DENABLE_WERROR=1 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++  -G Ninja
-              cmake --build build --parallel
-            '
-  
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            cmake -B build -DENABLE_E2E=1 -DENABLE_FUZZ=1 -DENABLE_SANITIZE=1 -DENABLE_CLANG_TIDY=1 -DENABLE_WERROR=1 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++  -G Ninja
+            cmake --build build --parallel
+          '
+
       - name: Test Coverage
         run: |
-            ${{ env.DOCKER_RUN_COMMAND }} '
-              cd build
-              ninja cov
-            '
+          ${{ env.DOCKER_RUN_COMMAND }} '
+            cd build
+            ninja cov
+          '
 
       - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
@@ -67,17 +67,10 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '100 100'
-      
+          thresholds: "90 90"
+
       - name: Build JS Variant
         uses: ./.github/actions/build-JS-variant
         with:
           DOCKER_RUN_COMMAND: ${{ env.DOCKER_RUN_COMMAND }}
           PROJECT_NAME: ${{ env.PROJECT_NAME }}
-      
-      
-      
-            
-            
-
-

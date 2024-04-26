@@ -1,7 +1,7 @@
 find_package(GTest REQUIRED)
 include(FetchContent)
 
-file(GLOB test_sources CONFIGURE_DEPENDS ./lit.cpp) # innclude lit test by default
+file(GLOB test_sources CONFIGURE_DEPENDS ./lit.cpp ./utils/*.cpp) # innclude lit test by default
 set(JSONCPP_WITH_TESTS false)
 set(CMAKE_CXX_FLAGS "-fno-rtti")
 if(ENABLE_SANITIZE)

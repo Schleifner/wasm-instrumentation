@@ -19,7 +19,7 @@ struct InstrumentPosition {
 };
 
 ///
-///@brief Class for basic block info
+///@brief information about debugLocation in a basic block
 ///
 class BasicBlockInfo final {
 public:
@@ -170,4 +170,5 @@ private:
   void unlinkEmptyBlock() noexcept;
 };
 } // namespace wasmInstrumentation
+
 #endif

@@ -1,5 +1,5 @@
 #include "CoverageInstru.hpp"
-using namespace wasmInstrumentation;
+namespace wasmInstrumentation {
 
 void CoverageInstru::innerAnalysis(BasicBlockAnalysis &basicBlockAnalysis) const noexcept {
   if (config->skipLib) {
@@ -183,3 +183,5 @@ wasm_instrument(char const *const fileName, char const *const targetName,
   return instrumentor.instrument();
 }
 #endif
+
+} // namespace wasmInstrumentation

@@ -13,6 +13,7 @@ enum class InstrumentationResponse : uint8_t {
   FILE_GENERATION_ERROR = 4U,       ///< instrumented file generation error
   EXPECT_INFO_GENERATION_ERROR = 5U ///< expectation info generation error
 };
+
 } // namespace wasmInstrumentation
 
 #endif

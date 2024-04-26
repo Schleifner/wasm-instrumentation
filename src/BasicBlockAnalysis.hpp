@@ -36,11 +36,12 @@ public:
   ///
   /// @param fileName
   /// @return Return true if the file should be included
-  bool shouldIncludeFile(const std::string &&fileName) const noexcept;
+  bool shouldIncludeFile(std::string_view fileName) const noexcept;
 
 private:
   std::vector<std::regex> includes; ///< functions should be processed
   std::vector<std::regex> excludes; ///< functions should not be processed
 };
 } // namespace wasmInstrumentation
+
 #endif

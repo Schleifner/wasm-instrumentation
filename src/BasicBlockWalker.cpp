@@ -1,12 +1,13 @@
 #include "BasicBlockWalker.hpp"
+#include <cfg/cfg-traversal.h>
 #include "ir/branch-utils.h"
-using namespace wasmInstrumentation;
+
+namespace wasmInstrumentation {
 
 void BasicBlockWalker::basicBlockWalk() noexcept {
   // Iterate DefinedFunctions, generate coverage infos
   wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
-    if ((!func->debugLocations.empty()) &&
-        basicBlockAnalysis.shouldIncludeFile(func->name.toString())) {
+    if ((!func->debugLocations.empty()) && basicBlockAnalysis.shouldIncludeFile(func->name.str)) {
       walkFunctionInModule(func, module);
     }
   });
@@ -47,9 +48,8 @@ void BasicBlockWalker::unlinkEmptyBlock() noexcept {
 }
 
 void BasicBlockWalker::doWalkFunction(wasm::Function *const func) noexcept {
-  using Parent = wasm::WalkerPass<wasm::CFGWalker<
-      BasicBlockWalker, wasm::UnifiedExpressionVisitor<BasicBlockWalker>, BasicBlockInfo>>;
-  Parent::doWalkFunction(func);
+  wasm::CFGWalker<BasicBlockWalker, wasm::UnifiedExpressionVisitor<BasicBlockWalker>,
+                  BasicBlockInfo>::doWalkFunction(func);
   unlinkEmptyBlock();
   // LCOV_EXCL_START
   if (basicBlocks.size() > UINT32_MAX) {
@@ -142,3 +142,5 @@ BasicBlockWalker::getCovInstrumentPosition(wasm::Expression *const expr) const n
 BasicBlockAnalysis BasicBlockWalker::getBasicBlockAnalysis() const noexcept {
   return basicBlockAnalysis;
 }
+
+} // namespace wasmInstrumentation

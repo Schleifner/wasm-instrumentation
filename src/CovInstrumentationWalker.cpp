@@ -1,6 +1,6 @@
 #include "CovInstrumentationWalker.hpp"
-using namespace wasmInstrumentation;
 
+namespace wasmInstrumentation {
 void CovInstrumentationWalker::introduceReportFun() noexcept {
   bool needImport = true;
   wasm::ModuleUtils::iterDefinedFunctions(
@@ -104,8 +104,10 @@ void CovInstrumentationWalker::covWalk() noexcept {
   introduceReportFun();
   wasm::ModuleUtils::iterDefinedFunctions(
       *module, [this](const BinaryenFunctionRef &func) noexcept {
-        if (basicBlockWalker.getBasicBlockAnalysis().shouldIncludeFile(func->name.toString())) {
+        if (basicBlockWalker.getBasicBlockAnalysis().shouldIncludeFile(func->name.str)) {
           walkFunctionInModule(func, this->module);
         }
       });
 }
+
+} // namespace wasmInstrumentation
