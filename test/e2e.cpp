@@ -7,16 +7,18 @@
 #include "../src/InstrumentResponse.hpp"
 #include "utils/utils.h"
 
-using namespace std::filesystem;
-
 TEST(e2e, asc) {
-  const path project_path = testUtils::getProjectPath();
-  const path build_path = project_path / "build";
-  const path wasmPath = project_path / "test" / "test-asc" / "build" / "debug.wasm";
-  const path mapPath = project_path / "test" / "test-asc" / "build" / "debug.wasm.map";
-  const path targetPath = wasmPath.parent_path() / "debug.wasm.instrumented.wasm";
-  const path targetDebugInfoPath = wasmPath.parent_path() / "debug.wasm.debuginfo.json";
-  const path targetExpectInfoPath = wasmPath.parent_path() / "debug.wasm.expectInfo.json";
+  const std::filesystem::path project_path = testUtils::getProjectPath();
+  const std::filesystem::path build_path = project_path / "build";
+  const std::filesystem::path wasmPath =
+      project_path / "test" / "test-asc" / "build" / "debug.wasm";
+  const std::filesystem::path mapPath =
+      project_path / "test" / "test-asc" / "build" / "debug.wasm.map";
+  const std::filesystem::path targetPath = wasmPath.parent_path() / "debug.wasm.instrumented.wasm";
+  const std::filesystem::path targetDebugInfoPath =
+      wasmPath.parent_path() / "debug.wasm.debuginfo.json";
+  const std::filesystem::path targetExpectInfoPath =
+      wasmPath.parent_path() / "debug.wasm.expectInfo.json";
   const char *reportName = "assembly/env/traceExpression";
   wasmInstrumentation::InstrumentationConfig config;
   config.fileName = wasmPath.c_str();
@@ -35,12 +37,15 @@ TEST(e2e, empty_config) {
 }
 
 TEST(e2e, illegal_path_config) {
-  const path project_path = testUtils::getProjectPath();
-  const path build_path = project_path / "build";
-  const path wasmPath = project_path / "test" / "test-asc" / "build" / "debug.wasm";
-  const path mapPath = project_path / "test" / "test-asc" / "build" / "debug.wasm.map";
-  const path targetPath = wasmPath.parent_path() / "debug.wasm.instrumented.wasm";
-  const path targetExpectInfoPath = wasmPath.parent_path() / "debug.wasm.expectInfo.json";
+  const std::filesystem::path project_path = testUtils::getProjectPath();
+  const std::filesystem::path build_path = project_path / "build";
+  const std::filesystem::path wasmPath =
+      project_path / "test" / "test-asc" / "build" / "debug.wasm";
+  const std::filesystem::path mapPath =
+      project_path / "test" / "test-asc" / "build" / "debug.wasm.map";
+  const std::filesystem::path targetPath = wasmPath.parent_path() / "debug.wasm.instrumented.wasm";
+  const std::filesystem::path targetExpectInfoPath =
+      wasmPath.parent_path() / "debug.wasm.expectInfo.json";
   const char *reportName = "assembly/env/traceExpression";
   wasmInstrumentation::InstrumentationConfig config;
   config.fileName = wasmPath.c_str();

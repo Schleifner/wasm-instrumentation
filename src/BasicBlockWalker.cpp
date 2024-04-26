@@ -7,8 +7,7 @@ namespace wasmInstrumentation {
 void BasicBlockWalker::basicBlockWalk() noexcept {
   // Iterate DefinedFunctions, generate coverage infos
   wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
-    if ((!func->debugLocations.empty()) &&
-        basicBlockAnalysis.shouldIncludeFile(func->name.toString())) {
+    if ((!func->debugLocations.empty()) && basicBlockAnalysis.shouldIncludeFile(func->name.str)) {
       walkFunctionInModule(func, module);
     }
   });

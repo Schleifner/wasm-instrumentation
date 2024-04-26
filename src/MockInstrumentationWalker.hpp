@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <regex>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -34,14 +35,15 @@ public:
         const auto &data = elemSegment->data;
         const size_t dataSize = data.size();
         for (std::size_t i = 0; i < dataSize; ++i) {
-          const auto funcRef = data[i]->cast<wasm::RefFunc>();
-          auto functionName = funcRef->func.toString();
+          const wasm::RefFunc *funcRef = data[i]->cast<wasm::RefFunc>();
+          std::string_view functionName = funcRef->func.str;
           const std::string_view nameSuffix = "@varargs";
-          if (functionName.size() > nameSuffix.size() &&
-              functionName.substr(functionName.size() - nameSuffix.size()) == nameSuffix) {
-            functionName = functionName.substr(0, functionName.size() - nameSuffix.size());
+          if (functionName.size() >= nameSuffix.size() &&
+              std::equal(nameSuffix.begin(), nameSuffix.end(),
+                         functionName.end() - nameSuffix.size())) {
+            functionName.remove_suffix(nameSuffix.size());
           }
-          funcRefs[std::move(functionName)] =
+          funcRefs[functionName] =
               std::make_pair(elemSegment->table, static_cast<wasm::Index>(i + 1));
         }
       }
@@ -71,13 +73,14 @@ public:
   void visitCall(wasm::Call *const curr) noexcept;
 
   static void doPreVisit(MockInstrumentationWalker *self, wasm::Expression **currp) {
-    auto *curr = *currp;
+    wasm::Expression *curr = *currp;
     auto &locs = self->getFunction()->debugLocations;
     auto &expressionStack = self->expressionStack;
     if (locs.find(curr) == locs.end()) {
       // No debug location, see if we should inherit one.
-      if (auto *previous = self->getPrevious()) {
-        if (auto it = locs.find(previous); it != locs.end()) {
+      if (wasm::Expression *previous = self->getPrevious()) {
+        auto it = locs.find(previous);
+        if (it != locs.end()) {
           locs[curr] = it->second;
         }
       }
@@ -91,8 +94,6 @@ public:
       // pop all the child expressions and keep current expression in stack.
       exprStack.pop_back();
     }
-    // the stack should never be empty
-    assert(!exprStack.empty());
   }
 
   static void scan(MockInstrumentationWalker *self, wasm::Expression **currp) {
@@ -138,16 +139,17 @@ public:
 private:
   wasm::Module *const module;  ///< working module
   const std::string checkMock; ///< mock check string
+  const std::regex functionFilter = std::regex("~lib/.+");
   wasm::Builder moduleBuilder; ///< module builder
   uint32_t expectIndex = 0U;   ///< expectation index, auto increase
   wasm::ExpressionStack expressionStack;
-  std::unordered_map<std::string, std::pair<wasm::Name, wasm::Index>>
+  std::unordered_map<std::string_view, std::pair<wasm::Name, wasm::Index>>
       funcRefs;                                          ///< cache function references
   std::unordered_map<uint32_t, std::string> expectInfos; ///< cache expectation infos
   const std::vector<std::string_view> expectTestFuncNames{
-      ">#isNull",   ">#notNull",         ">#equal",
-      ">#notEqual", ">#greaterThan",     ">#greaterThanOrEqual",
-      ">#lessThan", ">#lessThanOrEqual", ">#closeTo"}; ///< expectation functions list
+      "#isNull",   "#notNull",         "#equal",
+      "#notEqual", "#greaterThan",     "#greaterThanOrEqual",
+      "#lessThan", "#lessThanOrEqual", "#closeTo"}; ///< expectation functions list
 };
 
 } // namespace wasmInstrumentation

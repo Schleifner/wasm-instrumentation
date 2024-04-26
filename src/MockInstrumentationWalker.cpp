@@ -1,5 +1,5 @@
 #include "MockInstrumentationWalker.hpp"
-#include <regex>
+#include <string_view>
 #include <support/index.h>
 #include <wasm.h>
 // mock test will be tested with wasm-testing-framework project, escape this class
@@ -9,30 +9,34 @@ namespace wasmInstrumentation {
 void MockInstrumentationWalker::visitCall(wasm::Call *const curr) noexcept {
   /* generate expect infos */
   if (std::any_of(this->expectTestFuncNames.begin(), this->expectTestFuncNames.end(),
-                  [&curr](const std::string_view &str) noexcept {
-                    return curr->target.hasSubstring(str);
+                  [&curr](std::string_view str) noexcept {
+                    auto lastIndex = curr->target.str.find_last_of(">");
+                    if (lastIndex != std::string_view::npos) {
+                      return curr->target.str.substr(lastIndex + 1) == str;
+                    }
+                    return false;
                   })) {
-    const std::unordered_map<wasm::Expression *, wasm::Function::DebugLocation> currDebugLocations =
-        getFunction()->debugLocations;
+    const std::unordered_map<wasm::Expression *, wasm::Function::DebugLocation>
+        &currDebugLocations = getFunction()->debugLocations;
 
     const auto currentDebugLocationIterator = currDebugLocations.find(curr);
     if (currentDebugLocationIterator != currDebugLocations.cend()) {
       wasm::Function::DebugLocation const &currDebugLocation = currentDebugLocationIterator->second;
       const std::string &fileName = module->debugInfoFileNames[currDebugLocation.fileIndex];
       std::stringstream expectInfo;
-      expectInfo << fileName << ":" << std::to_string(currDebugLocation.lineNumber) << ":"
-                 << std::to_string(currDebugLocation.columnNumber);
+      expectInfo << fileName << ":" << currDebugLocation.lineNumber << ":"
+                 << currDebugLocation.columnNumber;
       expectInfos[expectIndex] = expectInfo.str();
     }
     curr->operands.back() = moduleBuilder.makeConst(wasm::Literal(expectIndex));
-    expectIndex += 1;
+    expectIndex++;
   }
 
   /* Function Call Mock */
-  const auto functionRefsIterator = funcRefs.find(curr->target.toString());
+  const auto functionRefsIterator = funcRefs.find(curr->target.str);
   if (functionRefsIterator != funcRefs.end()) {
     const wasm::Index localIdx = wasm::Builder::addVar(getFunction(), wasm::Type::i32);
-    const auto [tableName, originFuncIdx] = functionRefsIterator->second;
+    const auto &[tableName, originFuncIdx] = functionRefsIterator->second;
     const std::array<wasm::Expression *, 2U> callArgs = {moduleBuilder.makeConst(originFuncIdx),
                                                          moduleBuilder.makeConst(true)};
     wasm::If *const mockReplacement = moduleBuilder.makeIf(
@@ -87,7 +91,7 @@ uint32_t MockInstrumentationWalker::mockWalk() noexcept {
     return 1U; // failed
   } else {
     wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
-      if (!std::regex_match(func->name.toString(), std::regex("~lib/.+"))) {
+      if (!std::regex_match(func->name.str.begin(), func->name.str.end(), functionFilter)) {
         walkFunctionInModule(func, this->module);
       }
     });

@@ -12,16 +12,15 @@
 #include "../src/InstrumentResponse.hpp"
 #include "utils/utils.h"
 
-using namespace std::filesystem;
-
 TEST(lit, coverageInstrumentation) {
   // step 1, prepare
-  const path projectPath = testUtils::getProjectPath();
-  const path wasmOptPath = projectPath / "build" / "thirdparty" / "binaryen" / "bin" / "wasm-opt";
-  const path fixtureFolder = projectPath / "test" / "lit" / "covInstrument";
-  const path tmpDir = projectPath / "test" / "lit" / "build";
-  const path executor = projectPath / "test" / "lit" / "run.cjs";
-  const path checkPy = projectPath / "test" / "check.py";
+  const std::filesystem::path projectPath = testUtils::getProjectPath();
+  const std::filesystem::path wasmOptPath =
+      projectPath / "build" / "thirdparty" / "binaryen" / "bin" / "wasm-opt";
+  const std::filesystem::path fixtureFolder = projectPath / "test" / "lit" / "covInstrument";
+  const std::filesystem::path tmpDir = projectPath / "test" / "lit" / "build";
+  const std::filesystem::path executor = projectPath / "test" / "lit" / "run.cjs";
+  const std::filesystem::path checkPy = projectPath / "test" / "check.py";
 
   if (!exists(tmpDir)) {
     create_directory(tmpDir);
@@ -30,8 +29,8 @@ TEST(lit, coverageInstrumentation) {
   // step 2, build
 
   const std::string separator(" ");
-  std::vector<path> wastFiles;
-  for (const auto &entity : recursive_directory_iterator(fixtureFolder)) {
+  std::vector<std::filesystem::path> wastFiles;
+  for (const auto &entity : std::filesystem::recursive_directory_iterator(fixtureFolder)) {
     if (entity.is_regular_file() && entity.path().extension() == ".wast") {
       std::stringstream cmd;
       cmd << wasmOptPath;
@@ -47,11 +46,11 @@ TEST(lit, coverageInstrumentation) {
   Json::Reader jsonReader;
   // step 3, instrument , run and check;
   for (Json::String const &wast : wastFiles) {
-    const path wasmFile = tmpDir / (wast + ".out.wasm");
-    const path wasmFileMap = tmpDir / (wast + ".out.wasm.map");
-    const path wasmTarget = tmpDir / (wast + ".instrumented.wasm");
-    const path debugTarget = tmpDir / (wast + ".debug.json");
-    const path expectTarget = tmpDir / (wast + ".expect.json");
+    const std::filesystem::path wasmFile = tmpDir / (wast + ".out.wasm");
+    const std::filesystem::path wasmFileMap = tmpDir / (wast + ".out.wasm.map");
+    const std::filesystem::path wasmTarget = tmpDir / (wast + ".instrumented.wasm");
+    const std::filesystem::path debugTarget = tmpDir / (wast + ".debug.json");
+    const std::filesystem::path expectTarget = tmpDir / (wast + ".expect.json");
     const char *traceFunName = "assembly/env/traceExpression";
     wasmInstrumentation::InstrumentationConfig config;
     std::cout << "running lit - " << fixtureFolder << "/" << wast << std::endl;
@@ -67,7 +66,7 @@ TEST(lit, coverageInstrumentation) {
     ASSERT_EQ(instrumentor.instrument(), wasmInstrumentation::InstrumentationResponse::NORMAL);
     std::stringstream cmd;
     cmd << "node " << executor << " " << wasmTarget << " >" << tmpDir << "/" << wast << ".run.log";
-    const path fixtureFilePath = fixtureFolder / (wast + ".debug.json");
+    const std::filesystem::path fixtureFilePath = fixtureFolder / (wast + ".debug.json");
     std::ifstream fixtureStream(fixtureFilePath);
     std::ifstream debugInfoStream(debugTarget);
     Json::Value fixtureJson;
@@ -85,21 +84,21 @@ TEST(lit, coverageInstrumentation) {
 }
 
 TEST(lit, expectInstrumentation) {
-  const path projectPath = testUtils::getProjectPath();
-  const path fixtureFolder = projectPath / "test" / "lit" / "expectInstrument";
-  const path tmpDir = projectPath / "test" / "lit" / "build";
-  const path checkPy = projectPath / "test" / "check.py";
+  const std::filesystem::path projectPath = testUtils::getProjectPath();
+  const std::filesystem::path fixtureFolder = projectPath / "test" / "lit" / "expectInstrument";
+  const std::filesystem::path tmpDir = projectPath / "test" / "lit" / "build";
+  const std::filesystem::path checkPy = projectPath / "test" / "check.py";
 
   if (!exists(tmpDir)) {
     create_directory(tmpDir);
   }
 
   wasmInstrumentation::InstrumentationConfig config;
-  const path wasmFile = fixtureFolder / "expect.test.wasm";
-  const path wasmFileMap = fixtureFolder / "expect.test.wasm.map";
-  const path debugTarget = tmpDir / "expect.test.debug.json";
-  const path expectTarget = tmpDir / "expect.test.expect.json";
-  const path wasmTarget = tmpDir / "expect.test.instrumented.wasm";
+  const std::filesystem::path wasmFile = fixtureFolder / "expect.test.wasm";
+  const std::filesystem::path wasmFileMap = fixtureFolder / "expect.test.wasm.map";
+  const std::filesystem::path debugTarget = tmpDir / "expect.test.debug.json";
+  const std::filesystem::path expectTarget = tmpDir / "expect.test.expect.json";
+  const std::filesystem::path wasmTarget = tmpDir / "expect.test.instrumented.wasm";
   const char *traceFunName = "assembly/env/traceExpression";
   const char *include = "[\"tests-as\",\"assembly/.*\"]";
   config.fileName = wasmFile.c_str();
