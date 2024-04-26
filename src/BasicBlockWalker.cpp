@@ -49,8 +49,8 @@ void BasicBlockWalker::unlinkEmptyBlock() noexcept {
 }
 
 void BasicBlockWalker::doWalkFunction(wasm::Function *const func) noexcept {
-  CFGWalker<BasicBlockWalker, UnifiedExpressionVisitor<BasicBlockWalker>,
-            BasicBlockInfo>::doWalkFunction(func);
+  wasm::CFGWalker<BasicBlockWalker, wasm::UnifiedExpressionVisitor<BasicBlockWalker>,
+                  BasicBlockInfo>::doWalkFunction(func);
   unlinkEmptyBlock();
   // LCOV_EXCL_START
   if (basicBlocks.size() > UINT32_MAX) {

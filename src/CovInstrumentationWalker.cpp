@@ -32,8 +32,8 @@ void CovInstrumentationWalker::introduceReportFun() noexcept {
 }
 
 void CovInstrumentationWalker::visitFunction(wasm::Function *const curr) noexcept {
-  using Parent = PostWalker<CovInstrumentationWalker,
-                            UnifiedExpressionVisitor<CovInstrumentationWalker, void>>;
+  using Parent = wasm::PostWalker<CovInstrumentationWalker,
+                                  wasm::UnifiedExpressionVisitor<CovInstrumentationWalker, void>>;
   Parent::visitFunction(curr);
 
   const wasm::Index functionIndex = basicBlockWalker.getFunctionIndexByName(curr->name.str);
@@ -105,7 +105,7 @@ void CovInstrumentationWalker::covWalk() noexcept {
   wasm::ModuleUtils::iterDefinedFunctions(
       *module, [this](const BinaryenFunctionRef &func) noexcept {
         if (basicBlockWalker.getBasicBlockAnalysis().shouldIncludeFile(func->name.toString())) {
-          walkFunctionInModule(func, module);
+          walkFunctionInModule(func, this->module);
         }
       });
 }

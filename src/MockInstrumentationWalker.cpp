@@ -88,7 +88,7 @@ uint32_t MockInstrumentationWalker::mockWalk() noexcept {
   } else {
     wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
       if (!std::regex_match(func->name.toString(), std::regex("~lib/.+"))) {
-        walkFunctionInModule(func, module);
+        walkFunctionInModule(func, this->module);
       }
     });
     return 0U;
