@@ -83,3 +83,40 @@ TEST(lit, coverageInstrumentation) {
     ASSERT_EQ(system(runLogCmpCmd.str().c_str()), 0);
   }
 }
+
+TEST(lit, expectInstrumentation) {
+  const path projectPath = testUtils::getProjectPath();
+  const path fixtureFolder = projectPath / "test" / "lit" / "expectInstrument";
+  const path tmpDir = projectPath / "test" / "lit" / "build";
+  const path checkPy = projectPath / "test" / "check.py";
+
+  if (!exists(tmpDir)) {
+    create_directory(tmpDir);
+  }
+
+  wasmInstrumentation::InstrumentationConfig config;
+  const path wasmFile = fixtureFolder / "expect.test.wasm";
+  const path wasmFileMap = fixtureFolder / "expect.test.wasm.map";
+  const path debugTarget = tmpDir / "expect.test.debug.json";
+  const path expectTarget = tmpDir / "expect.test.expect.json";
+  const path wasmTarget = tmpDir / "expect.test.instrumented.wasm";
+  const char *traceFunName = "assembly/env/traceExpression";
+  const char *include = "[\"tests-as\",\"assembly/.*\"]";
+  config.fileName = wasmFile.c_str();
+  config.sourceMap = wasmFileMap.c_str();
+  config.debugInfoOutputFilePath = debugTarget.c_str();
+  config.expectInfoOutputFilePath = expectTarget.c_str();
+  config.targetName = wasmTarget.c_str();
+  config.reportFunction = traceFunName;
+  config.includes = include;
+  config.excludes = "";
+  wasmInstrumentation::CoverageInstru instrumentor(&config);
+  ASSERT_EQ(instrumentor.instrument(), wasmInstrumentation::InstrumentationResponse::NORMAL);
+
+  std::stringstream assertExpectInfoCmd;
+  assertExpectInfoCmd << "python3 " << checkPy << " " << fixtureFolder << "/"
+                      << "expect.test.expect.json"
+                      << " " << tmpDir << "/"
+                      << "expect.test.expect.json";
+  ASSERT_EQ(system(assertExpectInfoCmd.str().c_str()), 0);
+}
