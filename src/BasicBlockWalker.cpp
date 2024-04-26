@@ -6,7 +6,7 @@ namespace wasmInstrumentation {
 
 void BasicBlockWalker::basicBlockWalk() noexcept {
   // Iterate DefinedFunctions, generate coverage infos
-  ModuleUtils::iterDefinedFunctions(*module, [this](Function *const func) noexcept {
+  wasm::ModuleUtils::iterDefinedFunctions(*module, [this](wasm::Function *const func) noexcept {
     if ((!func->debugLocations.empty()) &&
         basicBlockAnalysis.shouldIncludeFile(func->name.toString())) {
       walkFunctionInModule(func, module);
@@ -14,12 +14,12 @@ void BasicBlockWalker::basicBlockWalk() noexcept {
   });
 }
 
-void BasicBlockWalker::visitExpression(Expression *curr) noexcept {
+void BasicBlockWalker::visitExpression(wasm::Expression *curr) noexcept {
   if (currBasicBlock == nullptr) {
     return;
   }
   // push information
-  Function *const currFun = getFunction();
+  wasm::Function *const currFun = getFunction();
   currBasicBlock->contents.exprs.push_back(curr);
   const auto debugLocationIterator = currFun->debugLocations.find(curr);
   if (debugLocationIterator != currFun->debugLocations.cend()) {
@@ -48,7 +48,7 @@ void BasicBlockWalker::unlinkEmptyBlock() noexcept {
                     basicBlocks.end());
 }
 
-void BasicBlockWalker::doWalkFunction(Function *const func) noexcept {
+void BasicBlockWalker::doWalkFunction(wasm::Function *const func) noexcept {
   CFGWalker<BasicBlockWalker, UnifiedExpressionVisitor<BasicBlockWalker>,
             BasicBlockInfo>::doWalkFunction(func);
   unlinkEmptyBlock();
@@ -59,14 +59,14 @@ void BasicBlockWalker::doWalkFunction(Function *const func) noexcept {
   }
   // LCOV_EXCL_STOP
   for (size_t i = 0; i < basicBlocks.size(); i++) {
-    basicBlocks[i]->contents.basicBlockIndex = static_cast<Index>(i);
+    basicBlocks[i]->contents.basicBlockIndex = static_cast<wasm::Index>(i);
   }
 
   FunctionAnalysisResult analysisResult;
   analysisResult.functionIndex = functionIndex;
   functionIndex++;
   for (const auto &basicBlock : basicBlocks) {
-    const Index currBasicBlockIndex = basicBlock->contents.basicBlockIndex;
+    const wasm::Index currBasicBlockIndex = basicBlock->contents.basicBlockIndex;
     // Generate Branch coverage info
     if (basicBlock->out.size() > 1U) {
       for (const auto &out : basicBlock->out) {
@@ -82,7 +82,7 @@ void BasicBlockWalker::doWalkFunction(Function *const func) noexcept {
       setCovInstrumentPosition(func->body, {currBasicBlockIndex, false});
       continue;
     }
-    Expression *expr = nullptr;
+    wasm::Expression *expr = nullptr;
     bool pre = false;
     if (basicBlock->contents.exprs.empty()) {
       for (const auto &inBlock : basicBlock->in) {
@@ -90,16 +90,16 @@ void BasicBlockWalker::doWalkFunction(Function *const func) noexcept {
         setCovInstrumentPosition(inBlock->contents.exprs.back(), {currBasicBlockIndex, false});
       }
     } else {
-      Expression *const lastExpression = basicBlock->contents.exprs.back();
-      if (lastExpression->is<Return>() || lastExpression->is<Break>() ||
-          lastExpression->is<Switch>()) {
+      wasm::Expression *const lastExpression = basicBlock->contents.exprs.back();
+      if (lastExpression->is<wasm::Return>() || lastExpression->is<wasm::Break>() ||
+          lastExpression->is<wasm::Switch>()) {
         if (basicBlock->contents.exprs.size() == 1U) {
           expr = lastExpression;
           pre = true;
         } else {
           expr = basicBlock->contents.exprs[basicBlock->contents.exprs.size() - 2];
         }
-      } else if (lastExpression->is<Block>() && basicBlock->contents.exprs.size() > 1U) {
+      } else if (lastExpression->is<wasm::Block>() && basicBlock->contents.exprs.size() > 1U) {
         // Special treatment for for-loop-continue case.
         expr = basicBlock->contents.exprs[basicBlock->contents.exprs.size() - 2];
       } else {
@@ -112,15 +112,16 @@ void BasicBlockWalker::doWalkFunction(Function *const func) noexcept {
   this->results[func->name.str] = std::move(analysisResult);
 }
 
-Index BasicBlockWalker::getFunctionIndexByName(const std::string_view &funcName) const noexcept {
+wasm::Index
+BasicBlockWalker::getFunctionIndexByName(const std::string_view &funcName) const noexcept {
   const auto functionResultIterator = results.find(funcName);
   if (functionResultIterator != results.cend()) {
     return functionResultIterator->second.functionIndex;
   }
-  return static_cast<Index>(-1);
+  return static_cast<wasm::Index>(-1);
 }
 
-void BasicBlockWalker::setCovInstrumentPosition(Expression *const expr,
+void BasicBlockWalker::setCovInstrumentPosition(wasm::Expression *const expr,
                                                 const InstrumentPosition &position) noexcept {
   auto positions = covInstrumentPosition.find(expr);
   if (positions != covInstrumentPosition.end()) {
@@ -131,7 +132,7 @@ void BasicBlockWalker::setCovInstrumentPosition(Expression *const expr,
 }
 
 const std::vector<InstrumentPosition> *
-BasicBlockWalker::getCovInstrumentPosition(Expression *const expr) const noexcept {
+BasicBlockWalker::getCovInstrumentPosition(wasm::Expression *const expr) const noexcept {
   const auto iterator = covInstrumentPosition.find(expr);
   if (iterator != covInstrumentPosition.cend()) {
     return &(iterator->second);

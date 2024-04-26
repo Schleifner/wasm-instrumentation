@@ -12,10 +12,9 @@
 #include "support/index.h"
 #include "wasm.h"
 namespace wasmInstrumentation {
-using namespace wasm;
 
 struct InstrumentPosition {
-  Index basicBlockIndex;
+  wasm::Index basicBlockIndex;
   bool pre; // pre = true means instrument before expression
 };
 
@@ -45,13 +44,13 @@ public:
   /// @brief Destructors for BasicBlockInfo
   ///
   ~BasicBlockInfo() noexcept {
-    basicBlockIndex = static_cast<Index>(-1);
+    basicBlockIndex = static_cast<wasm::Index>(-1);
   }
 
   ///
   /// @brief Default constructor for BasicBlockInfo
   ///
-  BasicBlockInfo() noexcept : basicBlockIndex(static_cast<Index>(-1)) {
+  BasicBlockInfo() noexcept : basicBlockIndex(static_cast<wasm::Index>(-1)) {
   }
 
   ///
@@ -71,38 +70,38 @@ public:
     this->exprs = std::move(src.exprs);
     this->debugLocations = std::move(src.debugLocations);
     this->basicBlockIndex = src.basicBlockIndex;
-    src.basicBlockIndex = static_cast<Index>(-1);
+    src.basicBlockIndex = static_cast<wasm::Index>(-1);
     return *this;
   }
-  std::vector<Expression *> exprs;                  ///< expressions
-  std::set<Function::DebugLocation> debugLocations; ///< debug infos
-  Index basicBlockIndex;                            ///< basic block ID
+  std::vector<wasm::Expression *> exprs;                  ///< expressions
+  std::set<wasm::Function::DebugLocation> debugLocations; ///< debug infos
+  wasm::Index basicBlockIndex;                            ///< basic block ID
 };
 
 /// @brief Class for the analysis result of each function of analysis
 class FunctionAnalysisResult final {
 public:
   /// @brief Default constructor of FunctionAnalysisResult
-  FunctionAnalysisResult() noexcept : functionIndex(static_cast<Index>(-1)) {
+  FunctionAnalysisResult() noexcept : functionIndex(static_cast<wasm::Index>(-1)) {
   }
-  std::vector<BasicBlockInfo> basicBlocks;         ///< basicBlocks in this function
-  std::vector<std::pair<Index, Index>> branchInfo; ///< function branch info
-  Index functionIndex;                             ///< function Index
+  std::vector<BasicBlockInfo> basicBlocks;                     ///< basicBlocks in this function
+  std::vector<std::pair<wasm::Index, wasm::Index>> branchInfo; ///< function branch info
+  wasm::Index functionIndex;                                   ///< function Index
 };
 
 ///
 ///@brief Basic block walker with basic block information
 ///
 class BasicBlockWalker final
-    : public WalkerPass<
-          CFGWalker<BasicBlockWalker, UnifiedExpressionVisitor<BasicBlockWalker>, BasicBlockInfo>> {
+    : public wasm::WalkerPass<wasm::CFGWalker<
+          BasicBlockWalker, wasm::UnifiedExpressionVisitor<BasicBlockWalker>, BasicBlockInfo>> {
 public:
   ///
   /// @brief Constructor for BasicBlockWalker
   ///
   /// @param _module
   /// @param _reportFunName
-  BasicBlockWalker(Module *const _module, BasicBlockAnalysis &_basicBlockAnalysis) noexcept
+  BasicBlockWalker(wasm::Module *const _module, BasicBlockAnalysis &_basicBlockAnalysis) noexcept
       : module(_module), basicBlockAnalysis(_basicBlockAnalysis) {
   }
   BasicBlockWalker(const BasicBlockWalker &src) = delete;
@@ -119,20 +118,20 @@ public:
   ///@brief Inherit from CFGWalker for expression visitor
   ///
   ///@param curr Current expression
-  void visitExpression(Expression *const curr) noexcept;
+  void visitExpression(wasm::Expression *const curr) noexcept;
 
   ///
   ///@brief Inherit from CFGWalker for function visitor
   ///
   ///@param func Current function
-  void doWalkFunction(Function *const func) noexcept;
+  void doWalkFunction(wasm::Function *const func) noexcept;
 
   ///
   /// @brief Search function id by function Name
   ///
   /// @param name
   /// @return Function ID
-  Index getFunctionIndexByName(const std::string_view &funcName) const noexcept;
+  wasm::Index getFunctionIndexByName(const std::string_view &funcName) const noexcept;
 
   ///
   /// @brief Query coverage instrument position by expression reference
@@ -140,7 +139,7 @@ public:
   /// @param expr
   ///
   const std::vector<InstrumentPosition> *
-  getCovInstrumentPosition(Expression *const expr) const noexcept;
+  getCovInstrumentPosition(wasm::Expression *const expr) const noexcept;
 
   BasicBlockAnalysis getBasicBlockAnalysis() const noexcept;
 
@@ -155,15 +154,15 @@ public:
   }
 
 private:
-  Module *const module;                         ///< working wasm module
-  Index functionIndex = 0U;                     ///< function Index
+  wasm::Module *const module;                   ///< working wasm module
+  wasm::Index functionIndex = 0U;               ///< function Index
   const BasicBlockAnalysis &basicBlockAnalysis; ///< include analysis
-  std::unordered_map<Expression *, std::vector<InstrumentPosition>> covInstrumentPosition;
+  std::unordered_map<wasm::Expression *, std::vector<InstrumentPosition>> covInstrumentPosition;
   std::unordered_map<std::string_view, FunctionAnalysisResult> results; ///< analysis results
   ///
   /// @brief traverse CFG to set the instrumentation position
   ///
-  void setCovInstrumentPosition(Expression *const expr,
+  void setCovInstrumentPosition(wasm::Expression *const expr,
                                 const InstrumentPosition &position) noexcept;
   ///
   /// @brief remove empty block that do not belong to any branch

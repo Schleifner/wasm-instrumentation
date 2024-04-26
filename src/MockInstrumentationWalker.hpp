@@ -13,13 +13,12 @@
 #include "wasm-traversal.h"
 #include "wasm.h"
 namespace wasmInstrumentation {
-using namespace wasm;
 ///
 ///@brief Mock instrumentation walker class
 ///
 // mock test will be tested with wasm-testing-framework project, escape this class
 // LCOV_EXCL_START
-class MockInstrumentationWalker final : public PostWalker<MockInstrumentationWalker> {
+class MockInstrumentationWalker final : public wasm::PostWalker<MockInstrumentationWalker> {
 public:
   ///
   /// @brief Constructor for MockInstrumentationWalker
@@ -27,14 +26,15 @@ public:
   /// @param _module
   /// @param _checkMock
   explicit MockInstrumentationWalker(
-      Module *const _module, const std::string _checkMock = "mockInstrument/checkMock") noexcept
-      : module(_module), checkMock(_checkMock), moduleBuilder(Builder(*_module)) {
+      wasm::Module *const _module,
+      const std::string _checkMock = "mockInstrument/checkMock") noexcept
+      : module(_module), checkMock(_checkMock), moduleBuilder(wasm::Builder(*_module)) {
     for (const auto &elemSegment : _module->elementSegments) {
       if (elemSegment->type.isFunction()) {
         const auto &data = elemSegment->data;
         const size_t dataSize = data.size();
         for (std::size_t i = 0; i < dataSize; ++i) {
-          const auto funcRef = data[i]->cast<RefFunc>();
+          const auto funcRef = data[i]->cast<wasm::RefFunc>();
           auto functionName = funcRef->func.toString();
           const std::string_view nameSuffix = "@varargs";
           if (functionName.size() > nameSuffix.size() &&
@@ -42,7 +42,7 @@ public:
             functionName = functionName.substr(0, functionName.size() - nameSuffix.size());
           }
           funcRefs[std::move(functionName)] =
-              std::make_pair(elemSegment->table, static_cast<Index>(i + 1));
+              std::make_pair(elemSegment->table, static_cast<wasm::Index>(i + 1));
         }
       }
     }
@@ -68,9 +68,9 @@ public:
   /// @brief Visit call instruction
   ///
   /// @param curr Current expression reference
-  void visitCall(Call *const curr) noexcept;
+  void visitCall(wasm::Call *const curr) noexcept;
 
-  static void doPreVisit(MockInstrumentationWalker *self, Expression **currp) {
+  static void doPreVisit(MockInstrumentationWalker *self, wasm::Expression **currp) {
     auto *curr = *currp;
     auto &locs = self->getFunction()->debugLocations;
     auto &expressionStack = self->expressionStack;
@@ -85,7 +85,7 @@ public:
     expressionStack.push_back(curr);
   }
 
-  static void doPostVisit(MockInstrumentationWalker *self, Expression **currp) {
+  static void doPostVisit(MockInstrumentationWalker *self, wasm::Expression **currp) {
     auto &exprStack = self->expressionStack;
     while (exprStack.back() != *currp) {
       // pop all the child expressions and keep current expression in stack.
@@ -95,7 +95,7 @@ public:
     assert(!exprStack.empty());
   }
 
-  static void scan(MockInstrumentationWalker *self, Expression **currp) {
+  static void scan(MockInstrumentationWalker *self, wasm::Expression **currp) {
     self->pushTask(MockInstrumentationWalker::doPostVisit, currp);
 
     PostWalker<MockInstrumentationWalker>::scan(self, currp);
@@ -103,14 +103,14 @@ public:
     self->pushTask(MockInstrumentationWalker::doPreVisit, currp);
   }
 
-  Expression *replaceCurrent(Expression *expression) {
+  wasm::Expression *replaceCurrent(wasm::Expression *expression) {
     PostWalker<MockInstrumentationWalker>::replaceCurrent(expression);
     // also update the stack
     expressionStack.back() = expression;
     return expression;
   }
 
-  Expression *getPrevious() {
+  wasm::Expression *getPrevious() {
     if (expressionStack.empty()) {
       return nullptr;
     }
@@ -122,7 +122,7 @@ public:
   /// @brief Visit call indirect instruction
   ///
   /// @param curr Current expression reference
-  void visitCallIndirect(CallIndirect *const curr) noexcept;
+  void visitCallIndirect(wasm::CallIndirect *const curr) noexcept;
 
   ///
   /// @brief Check mock function duplicated
@@ -136,13 +136,14 @@ public:
   uint32_t mockWalk() noexcept;
 
 private:
-  Module *const module;        ///< working module
+  wasm::Module *const module;  ///< working module
   const std::string checkMock; ///< mock check string
-  Builder moduleBuilder;       ///< module builder
+  wasm::Builder moduleBuilder; ///< module builder
   uint32_t expectIndex = 0U;   ///< expectation index, auto increase
-  ExpressionStack expressionStack;
-  std::unordered_map<std::string, std::pair<Name, Index>> funcRefs; ///< cache function references
-  std::unordered_map<uint32_t, std::string> expectInfos;            ///< cache expectation infos
+  wasm::ExpressionStack expressionStack;
+  std::unordered_map<std::string, std::pair<wasm::Name, wasm::Index>>
+      funcRefs;                                          ///< cache function references
+  std::unordered_map<uint32_t, std::string> expectInfos; ///< cache expectation infos
   const std::vector<std::string_view> expectTestFuncNames{
       ">#isNull",   ">#notNull",         ">#equal",
       ">#notEqual", ">#greaterThan",     ">#greaterThanOrEqual",

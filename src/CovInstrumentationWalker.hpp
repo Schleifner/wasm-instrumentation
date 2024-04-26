@@ -13,14 +13,12 @@
 #include "wasm-type.h"
 #include "wasm.h"
 namespace wasmInstrumentation {
-using namespace wasm;
-
 ///
 /// @brief Post walker for instrumentation purpose
 ///
 class CovInstrumentationWalker final
-    : public PostWalker<CovInstrumentationWalker,
-                        UnifiedExpressionVisitor<CovInstrumentationWalker, void>> {
+    : public wasm::PostWalker<CovInstrumentationWalker,
+                              wasm::UnifiedExpressionVisitor<CovInstrumentationWalker, void>> {
 public:
   ///
   /// @brief Constructor for CovInstrumentationWalker
@@ -28,9 +26,9 @@ public:
   /// @param _module
   /// @param _reportFunName
   /// @param _basicBlockWalker
-  CovInstrumentationWalker(Module *const _module, char const *const _reportFunName,
+  CovInstrumentationWalker(wasm::Module *const _module, char const *const _reportFunName,
                            BasicBlockWalker &_basicBlockWalker) noexcept
-      : module(_module), reportFunName(_reportFunName), moduleBuilder(Builder(*_module)),
+      : module(_module), reportFunName(_reportFunName), moduleBuilder(wasm::Builder(*_module)),
         basicBlockWalker(_basicBlockWalker) {
   }
   CovInstrumentationWalker(const CovInstrumentationWalker &src) = delete;
@@ -46,13 +44,13 @@ public:
   /// @brief walk function
   ///
   /// @param curr current function reference
-  void visitFunction(Function *const curr) noexcept;
+  void visitFunction(wasm::Function *const curr) noexcept;
 
   ///
   /// @brief walk expression
   ///
   /// @param curr current expression reference
-  void visitExpression(Expression *const curr) noexcept;
+  void visitExpression(wasm::Expression *const curr) noexcept;
 
   ///
   /// @brief walk module
@@ -60,9 +58,9 @@ public:
   void covWalk() noexcept;
 
 private:
-  Module *const module;                     ///< working wasm module
+  wasm::Module *const module;               ///< working wasm module
   char const *const reportFunName;          ///< trace report function name
-  Builder moduleBuilder;                    ///< module build for create wasm reference
+  wasm::Builder moduleBuilder;              ///< module build for create wasm reference
   const BasicBlockWalker &basicBlockWalker; ///< basic block walker for instrument
   ///
   /// @brief introduce the trace report function, if customer does not config report function, use a

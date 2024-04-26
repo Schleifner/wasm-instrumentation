@@ -47,8 +47,8 @@ InstrumentationResponse CoverageInstru::instrument() const noexcept {
     return InstrumentationResponse::CONFIG_FILEPATH_ERROR; // config file path error
   }
 
-  Module module;
-  ModuleReader reader;
+  wasm::Module module;
+  wasm::ModuleReader reader;
 
   reader.read(std::string(config->fileName), module, std::string(config->sourceMap));
   BasicBlockAnalysis basicBlockAnalysis = BasicBlockAnalysis();
@@ -73,7 +73,7 @@ InstrumentationResponse CoverageInstru::instrument() const noexcept {
     innerJson["branchInfo"] = branchInfoArray;
     Json::Value debugLineJson;
     for (const auto &basicBlock : result.basicBlocks) {
-      if (basicBlock.basicBlockIndex != static_cast<Index>(-1)) {
+      if (basicBlock.basicBlockIndex != static_cast<wasm::Index>(-1)) {
         Json::Value debugLineItemJsonArray(Json::ValueType::arrayValue);
         for (const auto &debugLine : basicBlock.debugLocations) {
           Json::Value debugInfo;
